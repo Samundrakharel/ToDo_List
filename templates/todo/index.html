@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-{%load static%}
+{% load static %}
 <html lang="en" dir="ltr">
 
 <head>
-    <link rel="stylesheet" href="{% static '/index.css' %}">
-<meta charset="utf-8">
-<title>{{title}}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 
 <body class="container-fluid">
@@ -19,49 +17,114 @@
 {% if messages %}
 {% for message in messages %}
 <div class="alert alert-info">
-	<strong>{{message}}</strong>
+    <strong>{{ message }}</strong>
 </div>
 {% endfor %}
 {% endif %}
 
 <center class="row">
-	<h1><i>__TODO LIST__</i></h1>
-	<hr />
+    <h1><i>__TODO LIST__</i></h1>
+    <hr />
 </center>
 
 <div class="row">
-
-	<div class="col-md-8">
-
-	{% for i in list %}
-	<div class="card">
-		<center><b>{{i.title}}</b></center>
-		<hr/>
-		{{i.date}}
-		<hr/>
-		{{i.details}}
-		<br />
-		<br />
-		<form action="/del/{{i.id}}" method="POST" style=" padding-right: 4%; padding-bottom: 3%;">
-		{% csrf_token %}
-		<button value="remove" type="submit" class="btn btn-primary" style="float: right;"><span class="glyphicon glyphicon-trash"></span>  remove</button>
-		</form>
-	</div>
-	{% endfor%}
-	</div>
-	<div class="col-md-1"> </div>
-	<div class="col-md-3" >
-	<div class="submit_form">
-	<form method="POST">
-		{% csrf_token %}
-		{{forms}}
-		<center>
-		<input type="submit" class="btn btn-default" value="submit" />
-	</center>
-	</form>
-	</div>
+    <div class="col-md-8">
+        {% for i in list %}
+        <div class="card">
+            <center><b>{{ i.title }}</b></center>
+            <hr />
+            {{ i.date }}
+            <hr />
+            {{ i.description }}
+            <br />
+            <br />
+            <button type="button" class="btn btn-primary edit-btn" data-id="{{ i.id }}">Edit</button>
+            <form id="deleteForm-{{ i.id }}" action="/del/{{ i.id }}" method="POST" style="padding-right: 4%; padding-bottom: 2%;">
+                {% csrf_token %}
+                <button type="button" class="btn btn-primary delete-btn" data-id="{{ i.id }}" style="float: right;">
+                    <span class="glyphicon glyphicon-trash"></span> Remove
+                </button>
+            </form>
+            <div id="edit-form-{{ i.id }}"></div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col-md-1"> </div>
+    <div class="col-md-3">
+        <div class="submit_form">
+            <form method="POST">
+                {% csrf_token %}
+                {{ forms }}
+                <center>
+                    <input type="submit" class="btn btn-default" value="submit" />
+                </center>
+            </form>
+        </div>
+    </div>
 </div>
+
+<!-- Modal for Edit -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="editModalLabel">Edit</h4>
+            </div>
+            <div class="modal-body">
+                <div id="edit-form-content"></div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Modal for Deletion Confirmation -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="confirmDeleteModalLabel">Confirm Deletion</h4>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="confirmDeleteButton">Remove</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    let deleteItemId = null;
+
+    $(".delete-btn").click(function () {
+      deleteItemId = $(this).data("id");
+      $('#confirmDeleteModal').modal('show');
+    });
+
+    $('#confirmDeleteButton').click(function () {
+      if (deleteItemId !== null) {
+        $('#deleteForm-' + deleteItemId).submit();
+      }
+    });
+
+    $(".edit-btn").click(function () {
+      var id = $(this).data("id");
+      $.get("/edit/" + id, function (data) {
+        $("#edit-form-content").html(data);
+        $('#editModal').modal('show');
+      });
+    });
+  });
+</script>
 </body>
 
 </html>
